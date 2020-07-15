@@ -7,7 +7,7 @@ services:
     env_file:
       - ./wordpress.env
     volumes:
-      - ./mysqldata/:/var/lib/mysql/
+      - ./data/mysql/:/var/lib/mysql/
     networks:
       - app-network
 
