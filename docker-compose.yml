@@ -39,7 +39,6 @@ services:
     networks:
       - app-network
 
-        #FIXME > wordpress config > keep it.. in case of upgrades
   wordpress:
     depends_on: 
       - mysql
