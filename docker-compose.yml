@@ -1,0 +1,66 @@
+version: "3.5"
+services:
+
+  mysql:
+    image: mysql:5.7
+    restart: unless-stopped
+    env_file:
+      - ./wordpress.env
+    volumes:
+      - ./mysqldata/:/var/lib/mysql/
+    networks:
+      - app-network
+
+  phpmyadmin:
+    depends_on:
+      - mysql
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "193.239.21.91:8080:80"
+    env_file:
+      - ./wordpress.env
+    networks:
+      - app-network
+
+  nginx:
+    depends_on:
+      - wordpress
+    image: nginx:1.15.12-alpine
+    restart: unless-stopped
+    ports:
+      - "193.239.21.91:80:80"
+      - "193.239.21.91:443:443"
+    volumes:
+      - ./wordpress:/var/www/html
+      - ./nginx-conf:/etc/nginx/conf.d
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    networks:
+      - app-network
+
+        #FIXME > wordpress config > keep it.. in case of upgrades
+  wordpress:
+    depends_on: 
+      - mysql
+    image: wordpress:5-fpm-alpine
+    restart: unless-stopped
+    env_file:
+      - ./wordpress.env
+    volumes:
+      - ./wordpress:/var/www/html
+    networks:
+      - app-network
+
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    networks:
+      - app-network
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+networks:
+   app-network:
